@@ -1,7 +1,7 @@
 # Deep Learning and its Application in Computer Vision
 This repository contains some assignments my group doing in this subject. 
 
-## Group 10
+## Group 1
 
 ### Members
 - **Tran Phan Quoc Dat** (2470077) – *Leader*
