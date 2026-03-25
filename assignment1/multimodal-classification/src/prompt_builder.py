@@ -248,12 +248,13 @@ def select_few_shot_examples(
     label_col: str = "label",
     text_col: str = "tweet_text",
     image_path_col: str = "image_path",
+    n_shot_per_class: int = 1,
     seed: int = 42,
 ) -> list[dict]:
-    """Select exactly **1 example per class** covering all 5 final labels.
+    """Select n_shot_per_class examples for each of the 5 final labels.
 
-    Strategy: for each class in ``LABEL_LIST``, pick one random sample from
-    the training split.  The returned dicts include ``image_path`` so that the
+    Strategy: for each class in ``LABEL_LIST``, pick n_shot_per_class random samples from
+    the training split (or fewer if not enough available). The returned dicts include ``image_path`` so that the
     caller can load the PIL image if needed.
 
     Args:
@@ -261,10 +262,11 @@ def select_few_shot_examples(
         label_col:       Column name for labels.
         text_col:        Column name for tweet text.
         image_path_col:  Column name for relative image file paths.
+        n_shot_per_class: Number of examples to select per class. Defaults to 1.
         seed:            Random seed for reproducibility.
 
     Returns:
-        A list of 5 dicts, each with keys:
+        A list of dicts (up to 5 * n_shot_per_class), each with keys:
         ``'tweet_text'``, ``'label'``, ``'image_path'``.
         (Add ``'image'`` key externally after loading from disk.)
     """
@@ -283,12 +285,15 @@ def select_few_shot_examples(
     for lbl in LABEL_LIST:
         if lbl not in class_indices:
             continue
-        idx = int(np.random.choice(class_indices[lbl]))
-        examples.append({
-            "tweet_text": texts[idx],
-            "label":      lbl,
-            "image_path": img_paths[idx],
-        })
+        pool = class_indices[lbl]
+        n = min(n_shot_per_class, len(pool))
+        chosen_idxs = np.random.choice(pool, size=n, replace=False)
+        for idx in chosen_idxs:
+            examples.append({
+                "tweet_text": texts[int(idx)],
+                "label":      lbl,
+                "image_path": img_paths[int(idx)],
+            })
 
     return examples
 
